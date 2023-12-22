@@ -54,6 +54,12 @@ div.post {
   }
 }
 
+@media (max-width: 767px) {
+  .username-hide{
+    display: none;
+  }
+}
+
 div.post div.texts h2 {
   margin: 0;
   font-size: 1.8rem;
