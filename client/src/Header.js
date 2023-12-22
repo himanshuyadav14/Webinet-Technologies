@@ -1,10 +1,11 @@
 import { useContext, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { UserContext } from "./UserContext";
 
 export default function Header() {
   
   const{setUserInfo,userInfo} = useContext(UserContext)
+  const navigate = useNavigate();
   
   useEffect(() => {
     fetch("http://localhost:4000/profile", {
@@ -16,13 +17,21 @@ export default function Header() {
     });
   }, []);
 
-  function logout() {
-    fetch("http://localhost:4000/logout", {
-      credentials: "include",
-      method: "POST",
-    });
-    setUserInfo(null);
+  async function logout() {
+    try {
+      await fetch("http://localhost:4000/logout", {
+        credentials: "include",
+        method: "POST",
+      });
+  
+      setUserInfo(null);
+  
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   }
+  
 
   const username = userInfo?.username;
 

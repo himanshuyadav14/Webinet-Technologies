@@ -23,6 +23,7 @@ function App() {
           <Route path="/create" element={<CreatePost></CreatePost>}></Route>
           <Route path="/post/:id" element={<PostPage></PostPage>}></Route>
           <Route path="/edit/:id" element={<EditPost></EditPost>}></Route>
+          <Route path="/delete/:id" element={<EditPost></EditPost>}></Route>
         </Route>
       </Routes>
     </UserContextProvider>
