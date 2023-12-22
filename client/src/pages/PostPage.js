@@ -72,7 +72,7 @@ export default function PostPage() {
         </div>
       )}
       <div className="image">
-        <img src={`http://localhost:4000/${postInfo.cover}`}></img>
+        <img src={postInfo.cover}></img>
       </div>
       <div
         className="content"

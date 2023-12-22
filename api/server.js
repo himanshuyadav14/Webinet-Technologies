@@ -9,8 +9,8 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 const multer = require("multer");
 const fs = require("fs");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 
 const salt = bcrypt.genSaltSync(10);
 const secret = "asdfe45we45w345wegw345werjktjwertkj";
@@ -35,7 +35,7 @@ cloudinary.config({
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
-    folder: "Blog", // Specify the folder in Cloudinary
+    folder: "Codehelp", // Specify the folder in Cloudinary
     format: async (req, file) => "png", // Format of the image (you can change this)
   },
 });
@@ -93,13 +93,15 @@ app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
       if (err) throw err;
 
       const { title, summary, content } = req.body;
-      const result = await cloudinary.uploader.upload(req.file.path);
+
+      // Use cloudinary.uploader.upload to upload the file and get the URL
+      const cloudinaryResult = await cloudinary.uploader.upload(req.file.path);
 
       const postDoc = await Post.create({
-        title,
-        summary,
-        content,
-        cover: result.secure_url,
+        title: title,
+        summary: summary,
+        content: content,
+        cover: cloudinaryResult.secure_url || cloudinaryResult.url,
         author: info.id,
       });
 
@@ -111,40 +113,46 @@ app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
   }
 });
 
-app.put("/post", uploadMiddleware.single("file"), async (req, res) => {
-  try {
-    const { token } = req.cookies;
-    jwt.verify(token, secret, {}, async (err, info) => {
-      if (err) throw err;
-
-      const { id, title, summary, content } = req.body;
-      const postDoc = await Post.findById(id);
-      const isAuthor =
-        JSON.stringify(postDoc.author) === JSON.stringify(info.id);
-      if (!isAuthor) {
-        return res.status(400).json("You are not the author");
-      }
-
-      let coverUrl = postDoc.cover;
-      if (req.file) {
-        const result = await cloudinary.uploader.upload(req.file.path);
-        coverUrl = result.secure_url;
-      }
-
-      await postDoc.update({
-        title,
-        summary,
-        content,
-        cover: coverUrl,
+app.put("/post/:id", uploadMiddleware.single("file"), async (req, res) => {
+    try {
+      const { token } = req.cookies;
+      jwt.verify(token, secret, {}, async (err, info) => {
+        if (err) throw err;
+  
+        const { id, title, summary, content } = req.body;
+        const postDoc = await Post.findById(id);
+        const isAuthor =
+          JSON.stringify(postDoc.author) === JSON.stringify(info.id);
+        if (!isAuthor) {
+          return res.status(400).json("You are not the author");
+        }
+  
+        let coverUrl = postDoc.cover;
+        if (req.file) {
+          const result = await cloudinary.uploader.upload(req.file.path);
+          coverUrl = result.secure_url;
+        }
+  
+        // Use updateOne to update the document
+        await Post.updateOne({ _id: id }, {
+          title,
+          summary,
+          content,
+          cover: coverUrl,
+        });
+  
+        // Fetch the updated document
+        const updatedPost = await Post.findById(id);
+  
+        res.json(updatedPost);
       });
-
-      res.json(postDoc);
-    });
-  } catch (error) {
-    console.error("Error updating post:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
+    } catch (error) {
+      console.error("Error updating post:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    }
+  });
+  
+  
 
 app.get("/post", async (req, res) => {
   res.json(
@@ -160,6 +168,27 @@ app.get("/post/:id", async (req, res) => {
   const postDoc = await Post.findById(id).populate("author", ["username"]);
   res.json(postDoc);
 });
+
+app.delete('/post/:id', async (req, res) => {
+    const postId = req.params.id;
+  
+    try {
+      // Find the post by ID and delete it
+      const deletedPost = await Post.findByIdAndDelete(postId);
+  
+      if (!deletedPost) {
+        // If the post with the given ID is not found
+        return res.status(404).json({ message: 'Post not found' });
+      }
+  
+      // Respond with a success message or any other necessary data
+      res.json({ message: 'Post deleted successfully', deletedPost });
+    } catch (error) {
+      // Handle errors, e.g., database errors
+      console.error('Error deleting post:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
 
 app.listen(4000);
 //
