@@ -94,9 +94,8 @@ app.post("/post", uploadMiddleware.single("file"), async (req, res) => {
 
       const { title, summary, content } = req.body;
 
-      // Use cloudinary.uploader.upload to upload the file and get the URL
       const cloudinaryResult = await cloudinary.uploader.upload(req.file.path);
-
+        
       const postDoc = await Post.create({
         title: title,
         summary: summary,
