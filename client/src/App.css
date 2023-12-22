@@ -100,6 +100,7 @@ input{
 button{
   width: 100%;
   display: block;
+  cursor: pointer;
   background-color: #555;
   border: 0;
   color: #fff;
@@ -171,5 +172,8 @@ div.post-page a.edit-btn{
 
 a svg{
   height: 20px;
+}
 
+a{
+  cursor: pointer;
 }
